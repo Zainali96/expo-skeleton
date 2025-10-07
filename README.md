@@ -1,4 +1,4 @@
-## 📦 Installation
+## Installation
 
 Make sure you have `expo-linear-gradient` installed in your project:
 
