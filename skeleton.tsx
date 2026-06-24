@@ -1,64 +1,75 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleProp,
-    StyleSheet,
-    View,
-    ViewStyle,
+  Animated,
+  DimensionValue,
+  Easing,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
 } from 'react-native';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
 interface SkeletonProps {
-  style?: StyleProp<ViewStyle>;
   borderRadius?: number;
+  height:number;
+  width?: DimensionValue;
+
 }
 
-const Skeleton: React.FC<SkeletonProps> = ({ style, borderRadius = 4 }) => {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
+const Skeleton: React.FC<SkeletonProps> = ({ width, height, borderRadius = 4 }) => {
+  const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      })
-    ).start();
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, []);
 
-  const translateX = shimmerAnim.interpolate({
+
+  const opacity = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
+    outputRange: [0, 0.12],
   });
 
   return (
-    <View style={[styles.container, { borderRadius }, style]}>
+    <View style={[styles.container, { width, height,borderRadius }]}>
       <Animated.View
         style={[
-          StyleSheet.absoluteFill,
-          {
-            transform: [{ translateX }],
-          },
+          StyleSheet.absoluteFillObject,
+          styles.overlay,
+          { borderRadius, opacity },
         ]}
-      >
-        <LinearGradient
-          colors={['transparent', 'rgba(255, 255, 255, 0.4)', 'transparent']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[StyleSheet.absoluteFill, { width: '100%' }]}
-        />
-      </Animated.View>
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgb(22, 21, 18)',
     overflow: 'hidden',
+  },
+  overlay: {
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
 });
 
